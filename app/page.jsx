@@ -30,14 +30,19 @@ import { useEffect, useState } from "react";
 
 export default function Home() {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const resultTodo = {};
-
   const initialRef = React.useRef(null);
   const finalRef = React.useRef(null);
   const toast = useToast();
+  const [editIsOpen, seteditIsOpen] = useState(false);
+  const [currentTodo, setcurrentTodo] = useState({});
   const [todos, settodos] = useState(
-    JSON.parse(localStorage.getItem("todos") ?? [])
+    JSON.parse(localStorage.getItem("todos") || "[]")
   );
+
+  const handleEditTodo = (index) => {
+    seteditIsOpen(index);
+    setcurrentTodo(todos[index]);
+  };
 
   const handleDeleteTodo = (index) => {
     const resultTodos = Array.from(todos);
@@ -54,6 +59,7 @@ export default function Home() {
 
   return (
     <main className="h-full">
+      {/* modal create */}
       <Modal
         initialFocusRef={initialRef}
         finalFocusRef={finalRef}
@@ -70,7 +76,12 @@ export default function Home() {
               <Input
                 ref={initialRef}
                 placeholder="Title"
-                onInput={(e) => (resultTodo.title = e.target.value)}
+                onInput={(e) => {
+                  setcurrentTodo((todo) => ({
+                    ...todo,
+                    title: e.target.value,
+                  }));
+                }}
               />
             </FormControl>
 
@@ -78,7 +89,12 @@ export default function Home() {
               <FormLabel>Description</FormLabel>
               <Textarea
                 placeholder="Description for your todo"
-                onInput={(e) => (resultTodo.description = e.target.value)}
+                onInput={(e) => {
+                  setcurrentTodo((todo) => ({
+                    ...todo,
+                    description: e.target.value,
+                  }));
+                }}
               />
             </FormControl>
 
@@ -87,7 +103,12 @@ export default function Home() {
               <Input
                 ref={initialRef}
                 type="datetime-local"
-                onInput={(e) => (resultTodo.endTime = new Date(e.target.value))}
+                onInput={(e) => {
+                  setcurrentTodo((todo) => ({
+                    ...todo,
+                    endTime: new Date(e.target.value),
+                  }));
+                }}
               />
             </FormControl>
           </ModalBody>
@@ -97,8 +118,9 @@ export default function Home() {
               colorScheme="blue"
               mr={3}
               onClick={() => {
-                settodos((todos) => [...todos, resultTodo]);
+                settodos((todos) => [...todos, currentTodo]);
                 onClose();
+                setcurrentTodo({});
               }}
             >
               Save
@@ -107,6 +129,75 @@ export default function Home() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* modal edit */}
+      <Modal isOpen={editIsOpen !== false} onClose={() => seteditIsOpen(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Edit Todo</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <FormControl>
+              <FormLabel>Title</FormLabel>
+              <Input
+                defaultValue={currentTodo?.title}
+                placeholder="Title"
+                onInput={(e) => {
+                  setcurrentTodo((todo) => ({
+                    ...todo,
+                    title: e.target.value,
+                  }));
+                }}
+              />
+            </FormControl>
+
+            <FormControl mt={4}>
+              <FormLabel>Description</FormLabel>
+              <Textarea
+                defaultValue={currentTodo?.description}
+                placeholder="Description for your todo"
+                onInput={(e) => {
+                  setcurrentTodo((todo) => ({
+                    ...todo,
+                    description: e.target.value,
+                  }));
+                }}
+              />
+            </FormControl>
+
+            <FormControl mt={4}>
+              <FormLabel>End Time</FormLabel>
+              <Input
+                defaultValue={currentTodo?.endTime}
+                type="datetime-local"
+                onInput={(e) => {
+                  setcurrentTodo((todo) => ({
+                    ...todo,
+                    endTime: new Date(e.target.value),
+                  }));
+                }}
+              />
+            </FormControl>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={() => {
+                const newTodos = Array.from(todos);
+                newTodos[seteditIsOpen] = currentTodo;
+                settodos(newTodos);
+                seteditIsOpen(false);
+              }}
+            >
+              Save
+            </Button>
+            <Button onClick={() => seteditIsOpen(false)}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       <Container maxW="container mx-auto">
         <Card className="p-6">
           <Box className="flex items-center justify-between">
@@ -130,14 +221,18 @@ export default function Home() {
                       {todo.description}
                     </Text>
                     <Text pt="2" fontSize="sm">
-                      {todo?.endTime instanceof Date
-                        ? todo.endTime.toDateString()
-                        : localStorage.getItem("todo")}
+                      Deadline:{" "}
+                      {todo?.endTime?.toDateString?.() || todo?.endTime}
                     </Text>
                   </Box>
 
                   <Box className="flex items-center gap-2">
-                    <Button colorScheme="yellow">Edit</Button>
+                    <Button
+                      colorScheme="yellow"
+                      onClick={() => handleEditTodo(index)}
+                    >
+                      Edit
+                    </Button>
                     <Button
                       colorScheme="red"
                       onClick={() => handleDeleteTodo(index)}

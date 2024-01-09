@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-
 import {
   Card,
   Container,
@@ -25,6 +24,7 @@ import {
   FormControl,
   FormLabel,
   Textarea,
+  Link,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
@@ -44,6 +44,10 @@ export default function Home() {
     setcurrentTodo(todos[index]);
   };
 
+  const randomId = () => {
+    return Math.round(Math.random() * 10_000_000);
+  };
+
   const handleDeleteTodo = (index) => {
     const resultTodos = Array.from(todos);
     resultTodos[index] = null;
@@ -55,6 +59,7 @@ export default function Home() {
 
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
+    console.log(todos);
   }, [todos]);
 
   return (
@@ -106,7 +111,7 @@ export default function Home() {
                 onInput={(e) => {
                   setcurrentTodo((todo) => ({
                     ...todo,
-                    endTime: new Date(e.target.value),
+                    endTime: new Date(e.target.value).getTime(),
                   }));
                 }}
               />
@@ -118,7 +123,13 @@ export default function Home() {
               colorScheme="blue"
               mr={3}
               onClick={() => {
-                settodos((todos) => [...todos, currentTodo]);
+                settodos((todos) => [
+                  ...todos,
+                  {
+                    id: randomId(),
+                    ...currentTodo,
+                  },
+                ]);
                 onClose();
                 setcurrentTodo({});
               }}
@@ -173,7 +184,7 @@ export default function Home() {
                 onInput={(e) => {
                   setcurrentTodo((todo) => ({
                     ...todo,
-                    endTime: new Date(e.target.value),
+                    endTime: new Date(e.target.value).getTime(),
                   }));
                 }}
               />
@@ -186,7 +197,7 @@ export default function Home() {
               mr={3}
               onClick={() => {
                 const newTodos = Array.from(todos);
-                newTodos[seteditIsOpen] = currentTodo;
+                newTodos[editIsOpen] = currentTodo;
                 settodos(newTodos);
                 seteditIsOpen(false);
               }}
@@ -215,14 +226,13 @@ export default function Home() {
                 <Box key={index} className="flex justify-between">
                   <Box className="flex flex-col">
                     <Heading size="xs" textTransform="uppercase">
-                      {todo.title}
+                      <Link href={`/todo/${todo.id}`}>{todo.title}</Link>
                     </Heading>
                     <Text pt="2" fontSize="sm">
                       {todo.description}
                     </Text>
                     <Text pt="2" fontSize="sm">
-                      Deadline:{" "}
-                      {todo?.endTime?.toDateString?.() || todo?.endTime}
+                      Deadline: {new Date(todo?.endTime)?.toDateString?.()}
                     </Text>
                   </Box>
 

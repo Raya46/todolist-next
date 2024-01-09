@@ -1,47 +1,50 @@
 import DBConnection from "@/database/config";
 
-const todoLists = [
-  {
-    id: 1,
-    title: "halo satu",
-    description: "description halo satu",
-    endTime: new Date("2023-01-08").getTime(),
-  },
-  {
-    id: 2,
-    title: "halo dua",
-    description: "description halo dua",
-    endTime: new Date("2023-01-09").getTime(),
-  },
-  {
-    id: 3,
-    title: "halo tiga",
-    description: "description halo tiga",
-    endTime: new Date("2023-01-10").getTime(),
-  },
-];
-
 const auth = (username, password) => {
   if (username === "admin" && password === "qweqweasd") return true;
   return false;
 };
 
-export default async function handler(req, res) {
-  const { query } = req;
-  const { username, password } = query;
+async function POSTHandler(req, res) {
+  const { body } = req;
+  const query = "INSERT INTO todos VALUES(null, ?,?,?)";
+  const DB = await DBConnection();
+  const [result, fields] = await DB.execute(query, [
+    body.title,
+    body.description,
+    body.endTime,
+  ]);
+
+  console.log(result, fields);
+
+  return res.status(200).json({
+    status: "OK",
+    data: result,
+  });
+}
+
+async function GETHandler(req, res) {
   let data = [];
+  const DB = await DBConnection();
+  const [result] = await DB.execute("SELECT * FROM todos", []);
+  console.log(result);
+  data = result;
+  DB.end();
 
-  if (auth(username, password)) {
-    data = todoLists;
-    const DB = await DBConnection();
-    const [result] = await DB.execute("SELECT * FROM todos", []);
-    console.log(result);
-    data = result;
-  }
-
-  return res.json({
-    code: 200,
+  return res.status(200).json({
     status: "OK",
     data: data,
   });
+}
+
+export default async function handler(req, res) {
+  const { query, method } = req;
+  const { username, password } = query;
+
+  if (auth(username, password)) {
+    if (method === "GET") return GETHandler(req, res);
+    if (method === "POST") return POSTHandler(req, res);
+  }
+
+  return res.status(400).json();
 }

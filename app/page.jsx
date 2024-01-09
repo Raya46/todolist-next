@@ -36,7 +36,7 @@ export default function Home() {
   const [editIsOpen, seteditIsOpen] = useState(false);
   const [currentTodo, setcurrentTodo] = useState({});
   const [todos, settodos] = useState(
-    JSON.parse(localStorage.getItem("todos") || "[]")
+    JSON?.parse(localStorage.getItem("todos") || "[]")
   );
 
   const handleEditTodo = (index) => {
